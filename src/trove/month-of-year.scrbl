@@ -1,0 +1,224 @@
+#lang scribble/manual
+@(require "../../scribble-api.rkt" "../abbrevs.rkt")
+@(require (only-in scribble/core delayed-block))
+
+@(define (moy-method name #:args args #:return ret #:contract contract)
+   (method-doc "MonthOfYear" "month-of-year" name #:alt-docstrings "" #:args args #:return ret #:contract contract))
+
+@(append-gen-docs
+  `(module "month-of-year"
+     (path "src/js/base/runtime-anf.js")
+     (data-spec
+      (name "MonthOfYear")
+      (variants ("m1" "m2" "m3" "m4" "m5" "m6" "m7" "m8" "m9" "m10" "m11" "m12"))
+      (shared (
+               (method-spec (name "get-display-name"))
+               (method-spec (name "get-value"))
+               (method-spec (name "length"))
+               (method-spec (name "leap-length"))
+               (method-spec (name "non-leap-length"))
+               (method-spec (name "change"))
+               (method-spec (name "minus"))
+               (method-spec (name "plus"))
+               )))
+     (fun-spec (name "make-month-of-year"))
+     (fun-spec (name "month-of-year"))
+     
+     (fun-spec (name "month-of-num"))
+     (fun-spec (name "month-of-text"))
+     ))
+
+@docmodule["month-of-year"]{
+
+ @ignore[(list "make-month-of-year")]
+
+ @section{The MonthOfYear Datatype}
+
+ @data-spec2["MonthOfYear" '() (list
+                             @singleton-spec2["MonthOfYear" "m1"]
+                             @singleton-spec2["MonthOfYear" "m2"]
+                             @singleton-spec2["MonthOfYear" "m3"]
+                             @singleton-spec2["MonthOfYear" "m4"]
+                             @singleton-spec2["MonthOfYear" "m5"]
+                             @singleton-spec2["MonthOfYear" "m6"]
+                             @singleton-spec2["MonthOfYear" "m7"]
+                             @singleton-spec2["MonthOfYear" "m8"]
+                             @singleton-spec2["MonthOfYear" "m9"]
+                             @singleton-spec2["MonthOfYear" "m10"]
+                             @singleton-spec2["MonthOfYear" "m11"]
+                             @singleton-spec2["MonthOfYear" "m12"]
+                             )]
+ @nested[#:style 'inset]{                  
+ The MonthOfYear represents the possible months of the standard Gregorian calendar.
+
+  The e-nums 1 through 12 happen to coincide with the conventional order of months
+  in the Gragorian Calendar, where 1 represents January, 2 represents
+  February, and so on.
+  
+  These twelve variables for MonthOfYear may be
+  created and manipulated with the methods and functions below.
+ }
+
+ @section{MonthOfYear Methods}
+
+ @moy-method["get-display-name"
+           #:contract (a-arrow MoY S)
+           #:args (list (list "self" #f))
+           #:return S
+           ]
+
+ Gets the textual representation in the Gregorian Calendar,
+ such as 'January' or 'December'.
+
+ @examples{
+  check:
+    m8.get-display-name() is "August"
+  end
+ }
+
+  @moy-method["get-value"
+           #:contract (a-arrow MoY N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the MonthOfYear Number value following the Gregorian
+ Calendar Convention
+
+ @examples{
+  check:
+    m2.get-value() is 2
+  end
+ }
+
+  @moy-method["length"
+           #:contract (a-arrow MoY B N)
+           #:args (list (list "self" #f) (list "is-leap-year" #f))
+           #:return N
+           ]
+
+Gets the length of this month in days.
+
+ @examples{
+  check:
+    m5.length(true) is 31
+    m5.length(false) is 31
+    m2.length(true) is 29
+    m2.length(false) is 28
+  end
+ }
+
+  @moy-method["leap-length"
+           #:contract (a-arrow MoY N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the length of this month in a leap year.
+
+ @examples{
+  check:
+    m5.leap-length() is 31
+    m2.leap-length() is 29
+  end
+ }
+
+  @moy-method["non-leap-length"
+           #:contract (a-arrow MoY N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the length of this month in a non-leap year.
+
+ @examples{
+  check:
+     m5.non-leap-length() is 31
+     m2.non-leap-length() is 28
+  end
+ }
+
+  @moy-method["change"
+           #:contract (a-arrow MoY (a-arrow N N) S)
+           #:args (list (list "self" #f) (list "f" #f))
+           #:return S
+           ]
+
+Returns the MonthOfYear after modifying the given MonthOfYear through 'f'.
+
+ @examples{
+  check:
+    m7.change(lam(x): x * -5 end) is m1
+  end
+ }
+
+ @moy-method["minus"
+           #:contract (a-arrow MoY N S)
+           #:args (list (list "self" #f) (list "days" #f))
+           #:return S
+           ]
+
+Returns the MonthOfYear that is the specified number of months before this one.
+
+ @examples{
+  check:
+     m1.minus(20) is m5
+  end
+ }
+
+ @moy-method["plus"
+           #:contract (a-arrow MoY N S)
+           #:args (list (list "self" #f) (list "days" #f))
+           #:return S
+           ]
+
+Returns the MonthOfYear that is the specified number of months after this one.
+
+ @examples{
+  check:
+    m1.plus(20) is m9
+  end
+ }
+
+ @section{Duration Functions}
+
+ These functions require the MonthOfYear module to be
+ @pyret{import}ed, as indicated in the examples.
+
+ @function["month-of-num"
+           #:contract (a-arrow N MoY)
+           #:args '(("n" #f))
+           #:return MoY
+           ]{
+
+  Obtains an instance of MonthOfYear from a Number value.
+
+  @examples{
+   check:
+     month-of-num(3) is m3
+     month-of-num(-39) is m9
+     month-of-num(22/7)
+       raises "Can only create MonthOfYear from Natural Numbers" 
+   end
+  }
+ }
+
+ @function["month-of-text"
+           #:contract (a-arrow S MoY)
+           #:args '(("n" #f))
+           #:return MoY
+           ]{
+
+  Returns the MonthOfYear from the specified name
+  in trade week respresentation.
+
+  @examples{
+   check:
+     month-of-text("junE") is m6
+     month-of-text("JAN")
+       raises "Please enter the month in full Gregorian form eg January"
+   end
+  }
+ }
+            
+}
