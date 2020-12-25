@@ -21,17 +21,9 @@
 @title[#:version @VERSION]{Pyret}
 
 
-@nested{This document has detailed information on the Pyret grammar and the
-behavior of its expression forms and built-in libraries, along with many
-examples and some longer descriptions of language design choices. If you want
-to do something in a program and you can't find how in this document, feel free
-to post a message on the
-@link["https://groups.google.com/forum/#!forum/pyret-discuss" "Pyret discussion
-list"], and we'll be happy to help.}
+@nested{This document contains the date-time library for Pyret, along with many
+examples and some longer descriptions of language design choices. 
 
-@nested{If you want to learn about (or teach!) programming and computer science
-using Pyret, check out @link["http://papl.cs.brown.edu/2015/" "Programming and
-Programming Languages (PAPL)"], which is a textbook on programming with all its
-examples in Pyret.}
+The official Pyret documentation can be found @link["https://www.pyret.org/docs/latest/" "here"].}
 
 @include-section["libraries.scrbl"]
