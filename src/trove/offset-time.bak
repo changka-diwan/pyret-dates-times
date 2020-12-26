@@ -1,0 +1,424 @@
+#lang scribble/manual
+@(require "../../scribble-api.rkt" "../abbrevs.rkt")
+@(require (only-in scribble/core delayed-block))
+
+;; abbreviations
+@; ZI -> ZoneId
+@; ZO -> ZoneOffset
+@; T -> Temporal
+@; ND -> Temporal%(is-naive-date)
+@; NT -> Temporal%(is-naive-time)
+@; NDT -> Temporal%(is-naive-date-time)
+@; OT -> Temporal%(is-offset-time)
+@; UDT -> Temporal%(is-utc-date-time)
+@; ODT -> Temporal%(is-offset-date-time)
+@; ZDT -> Temporal%(is-zoned-date-time)
+
+@(define (ot-method name #:args args #:return ret #:contract contract)
+   (method-doc "Temporal" "offset-time" name #:alt-docstrings "" #:args args #:return ret #:contract contract))
+
+@(append-gen-docs
+  `(module "offset-time"
+     (path "src/js/base/runtime-anf.js")
+     (data-spec
+      (name "OffsetTime")
+      (variants ("offset-time"))
+      (shared (
+               (method-spec (name "at-date"))
+               (method-spec (name "at-offset"))
+               (method-spec (name "get-second"))
+               (method-spec (name "get-minute"))
+               (method-spec (name "get-hour"))
+               (method-spec (name "get-naive-time"))
+               (method-spec (name "to-utc-time"))
+               (method-spec (name "with-offset-same-naive"))
+               (method-spec (name "is-after"))
+               (method-spec (name "is-before"))
+               (method-spec (name "minus"))
+               (method-spec (name "minus-seconds"))
+               (method-spec (name "minus-minutes"))
+               (method-spec (name "minus-hours"))
+               (method-spec (name "plus"))
+               (method-spec (name "plus-seconds"))
+               (method-spec (name "plus-minutes"))
+               (method-spec (name "plus-hours"))
+               (method-spect(name "to-string"))
+               (method-spec (name "to-second-of-day"))
+               (method-spec (name "until"))
+               (method-spec (name "with-unit"))
+               (method-spec (name "with-second"))
+               (method-spec (name "with-minute"))
+               (method-spec (name "with-hour"))
+               )))
+     @;{
+     (fun-spec (name "naive-time-of-any"))
+     (fun-spec (name "parse-naive-time"))
+     (fun-spec (name "duration-of-any"))
+     (fun-spec (name "duration-of-ymd"))
+     (fun-spec (name "duration-of-hms"))
+     (fun-spec (name "duration-of-years"))
+     (fun-spec (name "duration-of-months"))
+     (fun-spec (name "duration-of-days"))
+     (fun-spec (name "duration-of-hours"))
+     (fun-spec (name "duration-of-minutes"))
+     (fun-spec (name "duration-of-seconds"))
+     }
+     ))
+
+@docmodule["offset-time"]{
+
+ @ignore[(list "make-offset-time")]
+
+ @section{OffsetTime Methods}
+
+ @ot-method["at-date"
+            #:contract (a-arrow OT ND ODT)
+            #:args (list (list "self" #f) (list "date" #f))
+            #:return ODT
+            ]
+
+Combines this time with a date to create a Temporal%(is-offset-date-time).
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["at-offset"
+           #:contract (a-arrow OT ZO OT)
+           #:args (list (list "self" #f) (list "offset" #f))
+           #:return OT
+           ]
+
+ Combines this time with an offset to create an Temporal%(is-offset-time).
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["get-second"
+           #:contract (a-arrow OT N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the value of the seconds unit.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["get-minute"
+           #:contract (a-arrow OT N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the value of the minutes unit.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["get-hour"
+           #:contract (a-arrow OT N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+ Gets the value of the hours unit.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["get-naive-time"
+           #:contract (a-arrow OT NT)
+           #:args (list (list "self" #f))
+           #:return NT
+           ]
+
+ Gets the NaiveTime component from the OffsetTime in question.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["to-utc-time"
+           #:contract (a-arrow OT OT)
+           #:args (list (list "self" #f))
+           #:return OT
+           ]
+
+ Returns an OffsetTime with the time component representing the equivalent time in UTC and the ZoneOffset set to zero.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+@ot-method["with-offset-same-naive"
+           #:contract (a-arrow OT OT)
+           #:args (list (list "self" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with an offset of zero magnitude ensuring that the result has the same naive time.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+ 
+ @ot-method["is-after"
+           #:contract (a-arrow OT OT B)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return B
+           ]
+
+ Checks if this Temporal%(is-offset-time) is after the specified Temporal%(is-offset-time).
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["is-before"
+           #:contract (a-arrow OT OT B)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return B
+           ]
+
+ Checks if this Temporal%(is-offset-time) is before the specified Temporal%(is-offset-time).
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["minus"
+           #:contract (a-arrow OT D OT)
+           #:args (list (list "self" #f) (list "amt" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the specified amount subtracted.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["minus-seconds"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "seconds" #f))
+           #:return OT
+           ]
+
+  Returns a copy of this OffsetTime with the specified number of seconds subtracted.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["minus-minutes"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "minutes" #f))
+           #:return OT
+           ]
+
+  Returns a copy of this OffsetTime with the specified number of minutes subtracted.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+  @ot-method["minus-hours"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "hours" #f))
+           #:return OT
+           ]
+
+  Returns a copy of this OffsetTime with the specified number of hours subtracted.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+ 
+ @ot-method["plus"
+           #:contract (a-arrow OT D OT)
+           #:args (list (list "self" #f) (list "amt" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the specified amount added.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["plus-seconds"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "seconds" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the specified number of seconds added.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+@ot-method["plus-minutes"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "minutes" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the specified number of minutes added.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["plus-hours"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "hours" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the specified number of hours added.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+ 
+ @ot-method["to-string"
+           #:contract (a-arrow OT S)
+           #:args (list (list "self" #f))
+           #:return S
+           ]
+
+ Outputs this time as a String, such as 10:15:30+00:30.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["to-second-of-day"
+           #:contract (a-arrow OT N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+ Extracts the time as seconds of day, from 0 to 24 * 60 * 60 - 1.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["until"
+           #:contract (a-arrow OT OT D)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return D
+           ]
+
+ Calculates the normalized duration of time until another OffsetTime.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["with-unit"
+           #:contract (a-arrow OT UT N OT)
+           #:args (list (list "self" #f) (list "unit" #f) (list "val" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this time with the specified unit set to a new value.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+  @ot-method["with-second"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "second" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the seconds altered.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["with-minute"
+           #:contract (a-arrow OT N OT)
+           #:args (list (list "self" #f) (list "minute" #f))
+           #:return OT
+           ]
+
+ Returns a copy of this OffsetTime with the minutes altered.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+ @ot-method["with-hour"
+            #:contract (a-arrow OT N OT)
+            #:args (list (list "self" #f) (list "hour" #f))
+            #:return OT
+            ]
+
+ Returns a copy of this OffsetTime with the hours altered.
+
+ @examples{
+  check:
+  1 is 1
+  end
+ }
+
+}
