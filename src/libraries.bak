@@ -12,4 +12,3 @@ This section contains information on libraries that come with Pyret.
 @include-section["trove/month-of-year.scrbl"]
 @include-section["trove/zone-offset.scrbl"]
 @include-section["trove/zone-id.scrbl"]
-@include-section["trove/temporal.scrbl"]

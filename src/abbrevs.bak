@@ -1,6 +1,6 @@
 #lang racket/base
 (require "../scribble-api.rkt")
-(provide A N EN RN No B S EQ RA TA Ar RA-of A-of L L-of O-of S-of E-of P-of D TU DoW MoY ZO ZI T NT ND NDT OT UDT ODT ZDT)
+(provide A N EN RN No B S EQ RA TA Ar RA-of A-of L L-of O-of S-of E-of P-of D TU DoW MoY ZO ZI)
 
 (define A (a-id "Any" (xref "<global>" "Any")))
 (define N (a-id "Number" (xref "<global>" "Number")))
@@ -28,11 +28,3 @@
 (define MoY (a-id "MonthOfYear" (xref "<global>" "MonthOfYear")))
 (define ZO (a-id "ZoneOffset" (xref "<global>" "ZoneOffset")))
 (define ZI (a-id "ZoneId" (xref "<global>" "ZoneId")))
-(define T (a-id "Temporal" (xref "<global>" "Temporal")))
-(define NT (a-id "NaiveTime" (xref "<global>" "NaiveTime")))
-(define ND (a-id "NaiveDate" (xref "<global>" "NaiveDate")))
-(define NDT (a-id "NaiveDateTime" (xref "<global>" "NaiveDateTime")))
-(define OT (a-id "OffsetTime" (xref "<global>" "OffsetTime")))
-(define UDT (a-id "UTCDateTime" (xref "<global>" "UTCDateTime")))
-(define ODT (a-id "OffsetDateTime" (xref "<global>" "OffsetDateTime")))
-(define ZDT (a-id "ZonedDateTime" (xref "<global>" "ZonedDateTime")))
