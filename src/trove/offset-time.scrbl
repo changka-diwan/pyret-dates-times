@@ -55,6 +55,14 @@
 
 @docmodule["offset-time"]{
 
+ @data-spec2["ZoneOffset" '() (list
+                             @constructor-spec["ZoneOffset" "zoned-offset"
+                                               (list `("hour" ("type" "normal") ("contract" ,(a-id "OffsetHour")))
+                                                     `("minute" ("type" "normal") ("contract" ,(a-id "DateTimeMinute"))))])]
+
+ Offset Hour is any Integer that must be between (inclusive) -12 and 14
+ 
+
  @ignore[(list "make-offset-time")]
 
  @section{OffsetTime Methods}

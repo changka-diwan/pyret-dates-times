@@ -2,20 +2,8 @@
 @(require "../../scribble-api.rkt" "../abbrevs.rkt")
 @(require (only-in scribble/core delayed-block))
 
-;; abbreviations
-@; ZI -> ZoneId
-@; ZO -> ZoneOffset
-@; T -> Temporal
-@; ND -> Temporal%(is-naive-date)
-@; NT -> Temporal%(is-naive-time)
-@; NDT -> Temporal%(is-naive-date-time)
-@; OT -> Temporal%(is-offset-time)
-@; UDT -> Temporal%(is-utc-date-time)
-@; ODT -> Temporal%(is-offset-date-time)
-@; ZDT -> Temporal%(is-zoned-date-time)
-
 @(define (ot-method name #:args args #:return ret #:contract contract)
-   (method-doc "Temporal" "offset-time" name #:alt-docstrings "" #:args args #:return ret #:contract contract))
+   (method-doc "OffsetTime" "offset-time" name #:alt-docstrings "" #:args args #:return ret #:contract contract))
 
 @(append-gen-docs
   `(module "offset-time"
@@ -66,6 +54,16 @@
      ))
 
 @docmodule["offset-time"]{
+
+ @data-spec2["ZoneOffset" '() (list
+                             @constructor-spec["Temporal" "zoned-date-time"
+                                               (list `("year" ("type" "normal") ("contract" ,(a-id "DateTimeYear")))
+                                                     `("month" ("type" "normal") ("contract" ,(a-id "DateTimeMonth")))
+                                                     `("day" ("type" "normal") ("contract" ,(a-id "DateTimeDay")))
+                                                     `("hour" ("type" "normal") ("contract" ,(a-id "DateTimeHour")))
+                                                     `("minute" ("type" "normal") ("contract" ,(a-id "DateTimeMinute")))
+                                                     `("second" ("type" "normal") ("contract" ,(a-id "DateTimeSecond")))
+                                                     `("zone-id" ("type" "normal") ("contract" ,(a-id "ZoneID"))))])]
 
  @ignore[(list "make-offset-time")]
 
@@ -366,7 +364,7 @@ Gets the value of the minutes unit.
  }
 
  @ot-method["with-unit"
-           #:contract (a-arrow OT UT N OT)
+           #:contract (a-arrow OT TU N OT)
            #:args (list (list "self" #f) (list "unit" #f) (list "val" #f))
            #:return OT
            ]

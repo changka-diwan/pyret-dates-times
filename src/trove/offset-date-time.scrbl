@@ -50,7 +50,7 @@
   for the appropriate month of the appropriate year, integer months within [0, 12], and whole number year
  
 
-  @margin-note{An OffsetDateTime must also have a valid OffsetDate following the validity rules described in the OffsetDate Section
+  @margin-note{An OffsetDateTime must also have a valid offset following the validity rules described for ZoneOffset in the OffsetTime Section
  }
  }
 
