@@ -114,7 +114,7 @@
  @section{Duration Methods}
 
  @d-method["get"
-           #:contract (a-arrow D S D)
+           #:contract (a-arrow D TU N)
            #:args (list (list "self" #f) (list "unit" #f))
            #:return D
            ]

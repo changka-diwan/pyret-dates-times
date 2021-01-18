@@ -13,7 +13,7 @@
       (variants ("m1" "m2" "m3" "m4" "m5" "m6" "m7" "m8" "m9" "m10" "m11" "m12"))
       (shared (
                (method-spec (name "get-display-name"))
-               (method-spec (name "get-num"))
+               (method-spec (name "get-value"))
                (method-spec (name "length"))
                (method-spec (name "arithmetic-f"))
                (method-spec (name "subtract"))
@@ -23,8 +23,8 @@
      (fun-spec (name "make-month-of-year"))
      (fun-spec (name "month-of-year"))
      
-     (fun-spec (name "num-to-month"))
-     (fun-spec (name "string-to-month"))
+     (fun-spec (name "month-of-num"))
+     (fun-spec (name "month-of-text"))
      ))
 
 @docmodule["month-of-year"]{
@@ -51,7 +51,7 @@
  The MonthOfYear represents the possible months of the standard Gregorian calendar.
 
   The e-nums 1 through 12 happen to coincide with the conventional order of months
-  in the Gregorian Calendar, where 1 represents January, 2 represents
+  in the Gragorian Calendar, where 1 represents January, 2 represents
   February, and so on.
   
   These twelve variables for MonthOfYear may be
@@ -75,7 +75,7 @@
   end
  }
 
-  @moy-method["get-num"
+  @moy-method["get-value"
            #:contract (a-arrow MoY N)
            #:args (list (list "self" #f))
            #:return N
@@ -86,7 +86,7 @@ Gets the MonthOfYear Number value following the Gregorian
 
  @examples{
   check:
-    m2.get-num() is 2
+    m2.get-value() is 2
   end
  }
 
@@ -107,26 +107,54 @@ Gets the length of this month in days.
   end
  }
 
+  @moy-method["leap-length"
+           #:contract (a-arrow MoY N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
 
+Gets the length of this month in a leap year.
 
-  @moy-method["arithmetic-f"
-           #:contract (a-arrow MoY (a-arrow N N) MoY)
+ @examples{
+  check:
+    m5.leap-length() is 31
+    m2.leap-length() is 29
+  end
+ }
+
+  @moy-method["non-leap-length"
+           #:contract (a-arrow MoY N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the length of this month in a non-leap year.
+
+ @examples{
+  check:
+     m5.non-leap-length() is 31
+     m2.non-leap-length() is 28
+  end
+ }
+
+  @moy-method["change"
+           #:contract (a-arrow MoY (a-arrow N N) S)
            #:args (list (list "self" #f) (list "f" #f))
-           #:return MoY
+           #:return S
            ]
 
 Returns the MonthOfYear after modifying the given MonthOfYear through 'f'.
 
  @examples{
   check:
-    m7.arithmetic-f(lam(x): x * -5 end) is m1
+    m7.change(lam(x): x * -5 end) is m1
   end
  }
 
- @moy-method["subtract"
-           #:contract (a-arrow MoY MoY N)
-           #:args (list (list "self" #f) (list "months" #f))
-           #:return N
+ @moy-method["minus"
+           #:contract (a-arrow MoY N S)
+           #:args (list (list "self" #f) (list "days" #f))
+           #:return S
            ]
 
 Returns the MonthOfYear that is the specified number of months before this one.
@@ -137,25 +165,10 @@ Returns the MonthOfYear that is the specified number of months before this one.
   end
  }
 
-  @moy-method["between"
-           #:contract (a-arrow MoY N MoY)
-           #:args (list (list "self" #f) (list "other" #f))
-           #:return MoY
-           ]
-
-Returns the number of months between the specified months
-
- @examples{
-  check:
-     m1.between(m5) is 4
-     m5.between(m1) is 4
-  end
- }
-
- @moy-method["add"
-           #:contract (a-arrow MoY N MoY)
-           #:args (list (list "self" #f) (list "months" #f))
-           #:return MoY
+ @moy-method["plus"
+           #:contract (a-arrow MoY N S)
+           #:args (list (list "self" #f) (list "days" #f))
+           #:return S
            ]
 
 Returns the MonthOfYear that is the specified number of months after this one.
@@ -166,12 +179,12 @@ Returns the MonthOfYear that is the specified number of months after this one.
   end
  }
 
- @section{MonthOfYear Functions}
+ @section{Duration Functions}
 
  These functions require the MonthOfYear module to be
  @pyret{import}ed, as indicated in the examples.
 
- @function["num-to-month"
+ @function["month-of-num"
            #:contract (a-arrow N MoY)
            #:args '(("n" #f))
            #:return MoY
@@ -181,17 +194,17 @@ Returns the MonthOfYear that is the specified number of months after this one.
 
   @examples{
    check:
-     num-to-month(3) is m3
-     num-to-month(-39) is m9
-     num-to-month(22/7)
+     month-of-num(3) is m3
+     month-of-num(-39) is m9
+     month-of-num(22/7)
        raises "Can only create MonthOfYear from Natural Numbers" 
    end
   }
  }
 
- @function["string-to-month"
+ @function["month-of-text"
            #:contract (a-arrow S MoY)
-           #:args '(("text" #f))
+           #:args '(("n" #f))
            #:return MoY
            ]{
 
@@ -200,8 +213,8 @@ Returns the MonthOfYear that is the specified number of months after this one.
 
   @examples{
    check:
-     string-to-month("junE") is m6
-     string-to-month("JAN")
+     month-of-text("junE") is m6
+     month-of-text("JAN")
        raises "Please enter the month in full Gregorian form eg January"
    end
   }

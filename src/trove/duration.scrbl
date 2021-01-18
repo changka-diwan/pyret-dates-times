@@ -15,65 +15,32 @@
                (method-spec (name "get"))
                (method-spec (name "get-units"))
                (method-spec (name "normalize"))
-               (method-spec (name "get-hms"))
-               (method-spec (name "get-hms-normalized"))
-               (method-spec (name "get-ymd"))
-               (method-spec (name "get-ymd-normalized"))
                (method-spec (name "abs"))
-               (method-spec (name "abs-normalized"))
-               (method-spec (name "map"))
-               (method-spec (name "multiplied-by"))
-               (method-spec (name "divided-by"))
+               (method-spec (name "scale"))
+               (method-spec (name "scale-f"))
                (method-spec (name "equals"))
-               (method-spec (name "equals-normalized"))
                (method-spec (name "any"))
                (method-spec (name "all"))
                (method-spec (name "is-negative"))
                (method-spec (name "is-zero"))
-               (method-spec (name "get-years"))
-               (method-spec (name "get-months"))
-               (method-spec (name "get-days"))
-               (method-spec (name "get-hours"))
-               (method-spec (name "get-minutes"))
-               (method-spec (name "get-seconds"))
-               (method-spec (name "change-unit"))
-               (method-spec (name "minus"))
-               (method-spec (name "minus-unit"))
-               (method-spec (name "minus-years"))
-               (method-spec (name "minus-months"))
-               (method-spec (name "minus-days"))
-               (method-spec (name "minus-hours"))
-               (method-spec (name "minus-minutes"))
-               (method-spec (name "minus-seconds"))
+               (method-spec (name "set-unit"))
                (method-spec (name "plus"))
-               (method-spec (name "plus-unit"))
-               (method-spec (name "plus-years"))
-               (method-spec (name "plus-months"))
-               (method-spec (name "plus-days"))
-               (method-spec (name "plus-hours"))
-               (method-spec (name "plus-minutes"))
-               (method-spec (name "plus-seconds"))
-               (method-spec (name "to-unit"))
-               (method-spec (name "to-years"))
-               (method-spec (name "to-months"))
-               (method-spec (name "to-days"))
-               (method-spec (name "to-hours"))
-               (method-spec (name "to-minutes"))
-               (method-spec (name "to-seconds"))
+               (method-spec (name "minus"))
+               (method-spec (name "times"))
+               (method-spec (name "divide"))
                (method-spec (name "to-string"))
                )))
      (fun-spec (name "make-duration"))
      (fun-spec (name "duration"))
      
-     (fun-spec (name "duration-of-any"))
-     (fun-spec (name "duration-of-ymd"))
-     (fun-spec (name "duration-of-hms"))
-     (fun-spec (name "duration-of-years"))
-     (fun-spec (name "duration-of-months"))
-     (fun-spec (name "duration-of-days"))
-     (fun-spec (name "duration-of-hours"))
-     (fun-spec (name "duration-of-minutes"))
-     (fun-spec (name "duration-of-seconds"))
+     (fun-spec (name "ymd-to-duration"))
+     (fun-spec (name "hms-to-duration"))
+     (fun-spec (name "years-to-duration"))
+     (fun-spec (name "months-to-duration"))
+     (fun-spec (name "days-to-duration"))
+     (fun-spec (name "hours-to-duration"))
+     (fun-spec (name "minutes-to-duration"))
+     (fun-spec (name "seconds-to-duration"))
      ))
 
 @docmodule["duration"]{
@@ -114,129 +81,65 @@
  @section{Duration Methods}
 
  @d-method["get"
-           #:contract (a-arrow D S D)
-           #:args (list (list "self" #f) (list "unit" #f))
+           #:contract (a-arrow D (S-of TU) D)
+           #:args (list (list "self" #f) (list "units" #f))
            #:return D
            ]
 
- Gets the value of the requested unit.
+ Gets the value of the requested Duration from 'units' with 0 for
+ the non-requested units (i.e. without normalizing the Duration from 'units').
 
  @examples{
   check:
-    duration(1, 11, 6, -4, 2, -4.5).get(unit-month) is 11
-    duration(0, 0, 0, 41.3, 0, 0).get(unit-day) is 0
+    duration(1, 11, 6, -4, 2, -4.5).get([set: unit-month]) is duration(0, 11, 0, 0, 0, 0)
+    duration(41.3, 0, 11, 0, 23, 0).get([set: unit-day, unit-year, unit-hour]) is duration(41.3, 0, 0, 0, 0, 0)
   end
  }
 
  @d-method["get-units"
-           #:contract (a-arrow D D)
+           #:contract (a-arrow D (S-of TU))
            #:args (list (list "self" #f))
-           #:return D
+           #:return (S-of TU)
            ]
 
- Returns a list of non-0 units uniquely defining the value of this Duration.
+ Returns a set of non-0 units uniquely defining the value of this Duration.
 
  @examples{
   check:
     duration(1, 1, 1, 1, 1, 1).get-units()
-      is [list: unit-year, unit-month, unit-day, unit-hour, unit-minute, unit-second]
+      is [set: unit-year, unit-month, unit-day, unit-hour, unit-minute, unit-second]
     duration(0, 0, 2, -1.1, -5, 0).get-units()
-      is [list: unit-day, unit-hour, unit-minute]
-    duration(0, 0, 0, 0, 0, 0).get-units() is empty
+      is [set: unit-day, unit-hour, unit-minute]
+    duration(0, 0, 0, 0, 0, 0).get-units() is empty-set
   end
  }
 
  @d-method["normalize"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
+           #:contract (a-arrow D (S-of TU) D)
+           #:args (list (list "self" #f) (list "units" #f))
            #:return D
            ]
 
- Normalize the Duration into seconds and perform greedy division into a new Duration.
+Normalize the duration into seconds and perform greedy division into a new duration for the 'units' provided.
 
  @margin-note{A normalized Duration is greedily divided such that its
   year attribute, followed by month attribute, and so on are as large
-  as possible, implying that only the seconds attribute may be non-integer}
+  as possible, implying that only the units in the set passed may be non-integer,
+ and only the value of the smallest unit in the duration may be non-integer}
 
  @examples{
   check:
-    duration(1, 2, 3, 4, 5, 6).normalize()
+    duration(1, 2, 3, 4, 5, 6).normalize([set: unit-year])
       is duration(1, 2, 3, 4, 5, 6)
-    duration(1, 12, 30, 24, 60, 60).normalize()
+    duration(1, 12, 30, 24, 60, 60).normalize([set: unit-year, unit-month, unit-day, unit-hour, unit-minute, unit-second])
       is duration(2, 0, 26, 1, 1, 0)
-    duration(-1, 2, -3, 4, -5, 6).normalize()
-      is duration(0, -10, -7, -20, -4, -54)
-  end
- }
-
- @d-method["get-hms"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Obtains a Duration containing the hours, minutes, and seconds from the Duration on which this method is called.
-
- @examples{
-  check:
-    duration(10, 20, 30, 40, 50, 60).get-hms()
-      is duration(0, 0, 0, 40, 50, 60)
-    duration(1, 2, 3, 0, 0, 0).get-hms()
-      is duration(0, 0, 0, 0, 0, 0)
-  end
- }
-
- @d-method["get-hms-normalized"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Obtains and normalizes a Duration containing the hours, minutes, and
- seconds from the Duration on which this method is called.
-
- @examples{
-  check:
-    duration(10, 20, 30, 40, 50, 60).get-hms-normalized()
-      is duration(0, 0, 0, 102760, 51, 0)
-    duration(1, 2, 3, 0, 0, 0).get-hms-normalized()
-      is duration(0, 0, 0, 10272, 0, 0)
-  end
- }
-
- @d-method["get-ymd"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Obtains a Duration containing the years, months, and days from the Duration on which this method is called.
-
- @examples{
-  check:
-    duration(10, 20, 30, 40, 50, 60).get-ymd()
-      is duration(10, 20, 30)
-    duration(0, 0, 0, 1, 2, 3).get-ymd()
-      is duration(0, 0, 0)
-  end
- }
-
- @d-method["get-ymd-normalized"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Obtains and normalizes a Duration containing the years, months, and days from the Duration on which this method is called.
-
- @examples{
-  check:
-    duration(10, 20, 30, 40, 50, 60).get-ymd-normalized()
+    duration(-1, 2, -3, 4, -5, 6).normalize([set: unit-year, unit-hour, unit-minute, unit-second])
+      is ...
+      duration(10, 20, 30, 40, 50, 60).normalize([set: unit-year, unit-month, unit-year])
       is duration(11, 8, 12817/480, 0, 0, 0)
-    duration(0, 0, 0, 1, 2, 3).get-ymd-normalized()
-      is duration(0, 0, 1241/28800, 0, 0, 0)
   end
  }
+
 
  @d-method["abs"
            #:contract (a-arrow D D)
@@ -253,88 +156,40 @@
   end
  }
 
- @d-method["abs-normalized"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration normalized with all attributes made positive.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).abs-normalized()
-      is duration(0, 10, 7, 20, 4, 54)
-  end
- }
-
- @d-method["map"
+ @d-method["scale-f"
            #:contract (a-arrow D (a-arrow N N) D)
            #:args (list (list "self" #f) (list "f" #f))
            #:return D
            ]
 
- Returns a copy of the Duration with each Duration attribute mapped by 'f'
+Returns a copy of the Duration scaled by the function 'f'.
 
  @examples{
   check:
-    duration(0, 1, -1, 11/2, -22/7, 0).map(num-round)
+    duration(0, 1, -1, 11/2, -22/7, 0).scale-f(num-round)
       is duration(0, 1, -1, 6, -3, 0)
   end
  }
 
- @d-method["multiplied-by"
+
+ @d-method["scale"
            #:contract (a-arrow D N D)
            #:args (list (list "self" #f) (list "coeff" #f))
            #:return D
            ]
 
- Returns a copy of this Duration multiplied by the passed scalar.
+ Returns a copy of this Duration scaled by the passed scalar.
 
  @examples{
   check:
-    duration(1, 2, 3, 4, 5, 6).multiplied-by(2)
-      is duration(2, 4, 6, 8, 10, 12)
-  end
- }
-
- @d-method["divided-by"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "divisor" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration divided by the passed scalar.
-
- @examples{
-  check:
-    duration(2, 4, 6, 8, 10, 12).divided-by(2)
+    duration(2, 4, 6, 8, 10, 12).scale(0.5)
       is duration(1, 2, 3, 4, 5, 6)
-    duration(2, 4, 6, 8, 10, 12).divided-by(0)
-      raises "division by zero"
+    duration(2, 4, 6, 8, 10, 12).scale(0)
+      is duration(0, 0, 0, 0, 0, 0)
   end
  }
 
  @d-method["equals"
-           #:contract (a-arrow D D B)
-           #:args (list (list "self" #f) (list "other" #f))
-           #:return B
-           ]
-
- Checks if this Duration is equal to the specified Duration.
-
- @examples{
-  check:
-    duration(1, 20, 39, 2, -1, -90).equals(duration(1, 20, 39, 2, -1, -90))
-      is true
-    duration(1, 20, 39, 2, -1, -90).normalize()
-      is duration(2, 9, 4, 1, 57, 30)
-    duration(1, 20, 39, 2, -1, -90).equals(duration(2, 9, 4, 1, 57, 30))
-      is false
-  end
- }
-
- @d-method["equals-normalized"
            #:contract (a-arrow D D B)
            #:args (list (list "self" #f) (list "other" #f))
            #:return B
@@ -346,15 +201,13 @@
   check:
     duration(1, 20, 39, 2, -1, -90).equals(duration(1, 20, 39, 2, -1, -90))
       is true
-    duration(1, 20, 39, 2, -1, -90).normalize()
-      is duration(2, 9, 4, 1, 57, 30)
-    duration(1, 20, 39, 2, -1, -90).equals-normalized(duration(2, 9, 4, 1, 57, 30))
+    duration(1, 20, 39, 2, -1, -90).equals(duration(2, 9, 4, 1, 57, 30))
       is true
-    duration(-1, -2, -3, -4, -5, -6).equals-normalized(duration(1, 2, 3, 4, 5, 6))
+    duration(-1, -2, -3, -4, -5, -6).equals(duration(1, 2, 3, 4, 5, 6))
       is false
   end
  }
-
+@;{
  @d-method["any"
            #:contract (a-arrow D (a-arrow N N) D)
            #:args (list (list "self" #f) (list "f" #f))
@@ -390,6 +243,7 @@
       is true
   end
  }
+ }
 
  @d-method["is-negative"
            #:contract (a-arrow D B)
@@ -397,7 +251,7 @@
            #:return B
            ]
 
- Checks if this Duration is negative.
+ Checks if this Duration is negative in its normalized form.
 
  @examples{
   check:
@@ -406,6 +260,8 @@
     duration(-1, 2, -3, 4.09, -5, 6).is-negative()
       is true
     duration(-1, 20, -3, 4.09, -5, 6).is-negative()
+      is false
+      duration(0, 0, 0, 0, 0, 0).is-negative()
       is false
   end
  }
@@ -416,7 +272,7 @@
            #:return B
            ]
 
- Checks if this Duration is 0.
+ Checks if this Duration is 0 in its normalized form.
 
  @examples{
   check:
@@ -429,228 +285,18 @@
   end
  }
 
- @d-method["get-years"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of years in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-years()
-      is 1
-  end
- }
-
- @d-method["get-months"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of months in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-months()
-      is -2
-  end
- }
-
- @d-method["get-days"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of days in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-days()
-      is 3
-  end
- }
-
- @d-method["get-hours"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of hours in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-hours()
-      is -4
-  end
- }
-
- @d-method["get-minutes"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of minutes in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-minutes()
-      is 5
-  end
- }
-
- @d-method["get-seconds"
-           #:contract (a-arrow D N)
-           #:args (list (list "self" #f))
-           #:return N
-           ]
-
- Gets the number of seconds in this Duration.
-
- @examples{
-  check:
-    duration(1, -2, 3, -4, 5, -6).get-seconds()
-      is -6
-  end
- }
-
- @d-method["change-unit"
-           #:contract (a-arrow D TU (a-arrow N N) D)
-           #:args (list (list "self" #f) (list "unit" #f) (list "f" #f))
+ @d-method["set-unit"
+           #:contract (a-arrow D TU N D)
+           #:args (list (list "self" #f) (list "unit" #f) (list "n" #f))
            #:return D
            ]
 
- Returns a copy of this Duration with the specified unit modified by 'f'.
+ Returns a copy of this Duration with the specified unit modified to 'n'.
 
  @examples{
   check:
-    duration(-1, -2, -3, -4, -5, -6).change-unit(unit-day, lam(x): x / (-3) end)
-      is duration(-1, -2, 1, -4, -5, -6)
-  end
- }
-
- @d-method["minus"
-           #:contract (a-arrow D D D)
-           #:args (list (list "self" #f) (list "other" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified Duration subtracted.
-
- @examples{
-  check:
-    duration(1, 2, 3, 4, 5, 6).minus(duration(0, 1, 3, 5, 6, 99))
-      is duration(1, 1, 0, -1, -1, -93)
-  end
- }
-
- @d-method["minus-unit"
-           #:contract (a-arrow D N TU D)
-           #:args (list (list "self" #f) (list "amt" #f) (list "unit" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified 'amt' in 'unit' subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-unit(-7, unit-year)
-      is duration(19, 6, 7, 22, 45, 37)
-  end
- }
-
- @d-method["minus-years"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "years" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified years subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-years(1)
-      is duration(11, 6, 7, 22, 45, 37)
-  end
- }
-
- @d-method["minus-months"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "months" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified months subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-months(1)
-      is duration(12, 5, 7, 22, 45, 37)
-  end
- }
-
- @d-method["minus-days"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "days" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified days subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-days(1)
-      is duration(12, 6, 6, 22, 45, 37)
-  end
- }
-
- @d-method["minus-hours"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "hours" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified hours subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-hours(1)
-      is duration(12, 6, 7, 21, 45, 37)
-  end
- }
-
- @d-method["minus-minutes"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "minutes" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified minutes subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-minutes(1)
-      is duration(12, 6, 7, 22, 44, 37)
-  end
- }
-
- @d-method["minus-seconds"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "seconds" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified seconds subtracted.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-seconds(1)
-      is duration(12, 6, 7, 22, 45, 36)
+    duration(-1, -2, -3, -4, -5, -6).change-unit(unit-day, 3) end)
+      is duration(-1, -2, 3, -4, -5, -6)
   end
  }
 
@@ -669,214 +315,51 @@
   end
  }
 
- @d-method["plus-unit"
-           #:contract (a-arrow D N TU D)
-           #:args (list (list "self" #f) (list "amt" #f) (list "unit" #f))
+ @d-method["minus"
+           #:contract (a-arrow D D D)
+           #:args (list (list "self" #f) (list "other" #f))
            #:return D
            ]
 
- Returns a copy of this Duration with the specified 'amt' in 'unit' added.
+ Returns a copy of this Duration with the specified Duration subtracted.
 
  @examples{
   check:
-    duration(12, 6, 7, 22, 45, 37).plus-unit(-7, unit-year)
-      is duration(5, 6, 7, 22, 45, 37)
+    duration(1, 2, 3, 4, 5, 6).minus(duration(0, 1, 3, 5, 6, 99))
+      is duration(1, 1, 0, -1, -1, -93)
   end
  }
 
- @d-method["plus-years"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "years" #f))
+  @d-method["times"
+           #:contract (a-arrow D D D)
+           #:args (list (list "self" #f) (list "other" #f))
            #:return D
            ]
 
- Returns a copy of this Duration with the specified years added.
+ Returns a copy of this Duration with the specified Duration multiplied.
 
  @examples{
   check:
-    duration(12, 6, 7, 22, 45, 37).plus-years(1)
-      is duration(13, 6, 7, 22, 45, 37)
-  end
- }
-
- @d-method["plus-months"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "months" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified months added.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).plus-months(1)
-      is duration(12, 7, 7, 22, 45, 37)
-  end
- }
-
- @d-method["plus-days"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "days" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified days added.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).minus-days(1)
-      is duration(12, 6, 8, 22, 45, 44)
-  end
- }
-
- @d-method["plus-hours"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "hours" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified hours added.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).plus-hours(1)
-      is duration(13, 6, 7, 23, 45, 37)
-  end
- }
-
- @d-method["plus-minutes"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "minutes" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified minutes added.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).plus-minutes(1)
-      is duration(12, 6, 7, 22, 46, 37)
-  end
- }
-
- @d-method["plus-seconds"
-           #:contract (a-arrow D N D)
-           #:args (list (list "self" #f) (list "seconds" #f))
-           #:return D
-           ]
-
- Returns a copy of this Duration with the specified seconds added.
-
- @examples{
-  check:
-    duration(12, 6, 7, 22, 45, 37).plus-seconds(1)
-      is duration(12, 6, 7, 22, 45, 38)
+    duration(1, 2, 3, 4, 5, 6).times(duration(0, 1, 3, 5, 6, 99))
+      is ...
   end
  }
 
 
- @d-method["to-unit"
-           #:contract (a-arrow D TU D)
-           #:args (list (list "self" #f) (list "unit" #f))
+  @d-method["divide"
+           #:contract (a-arrow D D D)
+           #:args (list (list "self" #f) (list "other" #f))
            #:return D
            ]
 
- Converts this Duration to the given unit.
+ Returns a copy of this Duration with the specified Duration divided.
 
  @examples{
   check:
-    duration(1, 0, 365, 8760, 525600, 31536000).to-unit(unit-year)
-      is duration(5, 0, 0, 0, 0, 0)
-  end
- }
-
- @d-method["to-years"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to years.
-
- @examples{
-  check:
-    duration(1, 0, 365, 8760, 525600, 31536000).to-years()
-      is duration(5, 0, 0, 0, 0, 0)
-  end
- }
-
- @d-method["to-months"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to months.
-
- @examples{
-  check:
-    duration(0, 1, 30, 720, 43200, 2592000).to-months()
-      is duration(0, 5, 0, 0, 0, 0)
-  end
- }
-
- @d-method["to-days"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to days.
-
- @examples{
-  check:
-    duration(1/365, 1/30, 1, 24, 1440, 86400).to-days()
-      is duration(0, 0, 6, 0, 0, 0)
-  end
- }
-
- @d-method["to-hours"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to hours.
-
- @examples{
-  check:
-    duration(0, 0, 1/24, 1, 60, 3600).to-hours()
-      is duration(0, 0, 0, 4, 0, 0)
-  end
- }
-
- @d-method["to-minutes"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to minutes.
-
- @examples{
-  check:
-    duration(0, 0, 0, 1/60, 1, 60).to-minutes()
-      is duration(0, 0, 0, 0, 3, 0)
-  end
- }
-
-  @d-method["to-minutes"
-           #:contract (a-arrow D D)
-           #:args (list (list "self" #f))
-           #:return D
-           ]
-
- Converts this Duration to seconds.
-
- @examples{
-  check:
-    duration(0, 0, 0, 0, 1/60, 1).to-seconds()
-      is duration(0, 0, 0, 0, 0, 2)
+    duration(1, 2, 3, 4, 5, 6).divide(duration(0, 1, 3, 5, 6, 99))
+      is ...
+      duration(1, 2, 3, 4, 5, 6).divide(duration(0, 0, 0, 0, 0, 0))
+      raises "division by zero"
   end
  }
 
@@ -906,23 +389,8 @@
  @margin-note{The input is not normalized, and is instead stored as is to account
   for computational use cases.}
 
- @function["duration-of-any"
-           #:contract (a-arrow N N N N N N D)
-           #:args '(("years" #f) ("months" #f) ("days" #f) ("hours" #f) ("minutes" #f) ("seconds" #f))
-           #:return D
-           ]{
 
-  Obtains a duration representing an amount from the values of the different temporal units.
-
-  @examples{
-   check:
-     duration-of-any(1, 6, 5, 22, 43, 59)
-       is duration(1, 6, 5, 22, 43, 59)
-   end
-  }
- }
-
- @function["duration-of-ymd"
+ @function["ymd-to-duration"
            #:contract (a-arrow N N N D)
            #:args '(("years" #f) ("months" #f) ("days" #f))
            #:return D
@@ -933,13 +401,13 @@
 
   @examples{
    check:
-     duration-of-ymd(-4, -10, -21)
+     ymd-to-duration(-4, -10, -21)
        is duration(-4, -10, -21, 0, 0, 0)
    end
   }
  }
 
- @function["duration-of-hms"
+ @function["hms-to-duration"
            #:contract (a-arrow N N N D)
            #:args '(("hours" #f) ("minutes" #f) ("seconds" #f))
            #:return D
@@ -950,13 +418,13 @@
 
   @examples{
    check:
-     duration-of-hms(-5, -3, -11)
+     hms-to-duration(-5, -3, -11)
        is duration(0, 0, 0, -5, -3, -11)
    end
   }
  }
 
- @function["duration-of-years"
+ @function["years-to-duration"
            #:contract (a-arrow N D)
            #:args '(("years" #f))
            #:return D
@@ -966,13 +434,13 @@
 
   @examples{
    check:
-     duration-of-years(1)
+     years-to-duration(1)
        is duration(1, 0, 0, 0, 0, 0)
    end
   }
  }
 
- @function["duration-of-months"
+ @function["months-to-duration"
            #:contract (a-arrow N D)
            #:args '(("months" #f))
            #:return D
@@ -982,13 +450,13 @@
 
   @examples{
    check:
-     duration-of-months(1)
+     months-to-duration(1)
        is duration(0, 1, 0, 0, 0, 0)
    end
   }
  }
 
- @function["duration-of-days"
+ @function["days-to-duration"
            #:contract (a-arrow N D)
            #:args '(("days" #f))
            #:return D
@@ -998,13 +466,13 @@
 
   @examples{
    check:
-     duration-of-days(1)
+     days-to-duration(1)
        is duration(0, 0, 1, 0, 0, 0)
    end
   }
  }
 
- @function["duration-of-hours"
+ @function["hours-to-duration"
            #:contract (a-arrow N D)
            #:args '(("hour" #f))
            #:return D
@@ -1014,13 +482,13 @@
 
   @examples{
    check:
-     duration-of-years(1)
+     hours-to-duration(1)
        is duration(0, 0, 0, 1, 0, 0)
    end
   }
  }
 
- @function["duration-of-minutes"
+ @function["minutes-to-duration"
            #:contract (a-arrow N D)
            #:args '(("years" #f))
            #:return D
@@ -1030,13 +498,13 @@
 
   @examples{
    check:
-     duration-of-hours(1)
+     minutes-to-duration(1)
        is duration(0, 0, 0, 0, 1, 0)
    end
   }
  }
 
- @function["duration-of-seconds"
+ @function["seconds-to-duration"
            #:contract (a-arrow N D)
            #:args '(("seconds" #f))
            #:return D
@@ -1046,7 +514,7 @@
 
   @examples{
    check:
-     duration-of-years(1)
+     seconds-to-duration(1)
        is duration(0, 0, 0, 0, 0, 1)
    end
   }

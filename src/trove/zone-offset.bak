@@ -1,0 +1,244 @@
+#lang scribble/manual
+@(require "../../scribble-api.rkt" "../abbrevs.rkt")
+@(require (only-in scribble/core delayed-block))
+
+@(define (zo-method name #:args args #:return ret #:contract contract)
+   (method-doc "ZoneOffset" "zone-offset" name #:alt-docstrings "" #:args args #:return ret #:contract contract))
+
+@(append-gen-docs
+  `(module "zone-offset"
+     (path "src/js/base/runtime-anf.js")
+     (data-spec
+      (name "ZoneOffset")
+      (variants ("zone-offset"))
+      (shared (
+               (method-spec (name "difference"))
+               (method-spec (name "to-second"))
+               (method-spec (name "to-string"))
+               (method-spec (name ""))
+               (method-spec (name "difference"))
+               )))
+     (fun-spec (name "make-zone-offset"))
+     (fun-spec (name "zone-offset"))
+     
+     (fun-spec (name "offset-of-text"))
+     (fun-spec (name "offset-of-id"))
+     (fun-spec (name "offset-of-hours"))
+     (fun-spec (name "offset-of-hours-minutes"))
+     ))
+
+@docmodule["zone-offset"]{
+
+ @ignore[(list "make-zone-offset")]
+
+ @section{The ZoneOffset Datatype}
+
+ @data-spec2["ZoneOffset" '() (list
+                             @constructor-spec["ZoneOffset" "zone-offset"
+                                               (list `("sign" ("type" "normal") ("contract" ,(a-id "String")))
+                                                     `("hours" ("type" "normal") ("contract" ,(a-id "Number")))
+                                                     `("minutes" ("type" "normal") ("contract" ,(a-id "Number")))
+                                                     )])]
+ @nested[#:style 'inset]{                  
+ The ZoneOffset stores the interval between two durations in the form of a time-zone offset.
+
+  In effect, a ZoneOffset of ("+", 0, 0) represents UTC or GMT, ("-", 5, 0) represents EST, and so on.
+ }
+
+ @section{ZoneOffset Methods}
+
+ @zo-method["difference"
+           #:contract (a-arrow ZO ZO D)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return D
+           ]
+
+ Finds the difference between two ZoneOffsets as a Duration.
+
+ @examples{
+  check:
+    zone-offset("+", 10, 30).difference(zone-offset("+", 8, 0))
+      is duration(0, 0, 0, 2, 30, 0)
+    zone-offset("-", 10, 30).difference(zone-offset("+", 13, 15))
+      is duration(0, 0, 0, -23, -45, 0)
+  end
+ }
+
+ @zo-method["normalize"
+           #:contract (a-arrow ZO ZO)
+           #:args (list (list "self" #f))
+           #:return ZO
+           ]
+
+ Normalizes the ZoneOffset into minutes and then greedily
+ divides it into a new ZoneOffset with hours and minutes.
+
+ @examples{
+  check:
+    zone-offset("-", 0, -45).normalize()
+      is zone-offset("+", 0, 45)
+    zone-offset("+", 3, 60).normalize()
+      is zone-offset("+", 4, 0)
+  end
+ }
+
+ @zo-method["equals"
+           #:contract (a-arrow ZO ZO B)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return B
+           ]
+
+ Checks if this ZoneOffset is equal to the specified other.
+
+ @examples{
+  check:
+    zone-offset("+", 1, 30).equals(zone-offset("+", 1, 30)) is true
+    zone-offset("+", 1, 30).equals(zone-offset("-", -2, 30)) is false
+  end
+ }
+
+ @zo-method["equals-normalized"
+           #:contract (a-arrow ZO ZO B)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return B
+           ]
+
+ Checks if this offset is equal to another offset when
+ both are in their normalized forms.
+
+ @examples{
+  check:
+    zone-offset("+", 1, 30).equals-normalized(zone-offset("+", 1, 30)) is true
+    zone-offset("+", 1, 30).equals-normalized(zone-offset("-", -2, 30)) is true
+    zone-offset("+", 1, 30).equals-normalized(zone-offset("+", 2, 30)) is fase
+  end
+ }
+
+ @zo-method["get"
+           #:contract (a-arrow ZO N)
+           #:args (list (list "self" #f))
+           #:return D
+           ]
+
+ Gets the value of the specified unit from this ZoneOffset as a Number.
+
+ @examples{
+  check:
+    zone-offset("+", 1, 30).get(unit-minute) is 30
+    zone-offset("+", 1, 30).get(unit-year)
+      raises "ZoneOffset may only have an hour and minute unit"
+  end
+ }
+
+ @zo-method["get-seconds"
+           #:contract (a-arrow ZO N)
+           #:args (list (list "self" #f))
+           #:return N
+           ]
+
+Gets the total ZoneOffset in seconds.
+
+ @examples{
+  check:
+    zone-offset("+", 10, 45).get-seconds()
+      is (((10 * 60) + 45) * 60)
+  end
+ }
+
+ @zo-method["to-string"
+           #:contract (a-arrow ZO S)
+           #:args (list (list "self" #f))
+           #:return S
+           ]
+
+ Outputs this ZoneOffset as a String, using an '+18:00' format.
+
+ @examples{
+  check:
+    zone-offset("+", 8, 0).to-string() is "+8:00"
+    zone-offset("+", 5, 22/7).to-string() is "+5:03"
+  end
+ }
+
+ @section{Duration Functions}
+
+ These functions require the ZoneOffset module to be
+ @pyret{import}ed, as indicated in the examples.
+
+ @function["offset-of-text"
+           #:contract (a-arrow N ZO)
+           #:args '(("n" #f))
+           #:return ZO
+           ]{
+
+  Obtains an instance of ZoneOffset using a string representation.
+
+  @examples{
+   check:
+     offset-of-text("-1:59") is zone-offset("-", 1, 59)
+     offset-of-text("+-8:-60") is zone-offset("-", 9, 0)
+     offset-of-text("811")
+       raises "ZoneOffset text did not have a sign"
+     offset-of-text("8:11")
+       raises "ZoneOffset text did not have a sign"
+     offset-of-text("+811")
+       raises "ZoneOffset text input must be in the form '+18:00'"
+     offset-of-text("+a:b")
+       raises "ZoneOffset text must have a number for hours"
+     offset-of-text("+0:b")
+       raises "ZoneOffset text must have a number for minutes"
+   end
+  }
+ }
+
+ @function["offset-of-id"
+           #:contract (a-arrow N ZO)
+           #:args '(("n" #f))
+           #:return ZO
+           ]{
+
+  Obtains an instance of ZoneOffset using the ZoneId.
+
+  @examples{
+   check:
+     offset-of-id(GMT)
+       is zone-offset("+", 0, 0)
+     offset-of-id(IST)
+       is zone-offset("+", 5, 30)
+   end
+  }
+ }
+
+ @function["offset-of-hours"
+           #:contract (a-arrow N ZO)
+           #:args '(("n" #f))
+           #:return ZO
+           ]{
+
+  Obtains an instance of ZoneOffset using hours.
+
+  @examples{
+   check:
+     offset-of-hours(-7)
+       is zone-offset("-", 7, 0)
+   end
+  }
+ }
+
+ @function["offset-of-hours-minutes"
+           #:contract (a-arrow N ZO)
+           #:args '(("n" #f))
+           #:return ZO
+           ]{
+
+  Obtains an instance of ZoneOffset using hours and minutes.
+
+  @examples{
+   check:
+     offset-of-hours-minutes(1, -100)
+       is zone-offset("-", 0, 40)
+   end
+  }
+ }
+            
+}

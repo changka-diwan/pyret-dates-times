@@ -15,15 +15,14 @@
                (method-spec (name "get-display-name"))
                (method-spec (name "get-num"))
                (method-spec (name "arithmetic-f"))
-               (method-spec (name "subtract"))
-               (method-spec (name "between"))
-               (method-spec (name "add"))
+               (method-spec (name "minus"))
+               (method-spec (name "plus"))
                )))
      (fun-spec (name "make-day-of-week"))
      (fun-spec (name "day-of-week"))
      
-     (fun-spec (name "num-to-day"))
-     (fun-spec (name "string-to-day"))
+     (fun-spec (name "day-of-num"))
+     (fun-spec (name "day-of-text"))
      ))
 
 @docmodule["day-of-week"]{
@@ -69,7 +68,7 @@
   end
  }
 
-  @dow-method["get-num"
+  @dow-method["get-value"
            #:contract (a-arrow DoW N)
            #:args (list (list "self" #f))
            #:return N
@@ -84,10 +83,10 @@ Gets the day-of-week Number value following the
   end
  }
 
-  @dow-method["arithmetic-f"
-           #:contract (a-arrow DoW (a-arrow N N) DoW)
+  @dow-method["change"
+           #:contract (a-arrow DoW (a-arrow N N) S)
            #:args (list (list "self" #f) (list "f" #f))
-           #:return DoW
+           #:return S
            ]
 
 Returns the DayOfWeek after modifying the given DayOfWeek through 'f'.
@@ -98,52 +97,40 @@ Returns the DayOfWeek after modifying the given DayOfWeek through 'f'.
   end
  }
 
- @dow-method["subtract"
-           #:contract (a-arrow DoW N DoW)
+ @dow-method["minus"
+           #:contract (a-arrow DoW N S)
            #:args (list (list "self" #f) (list "days" #f))
-           #:return DoW
+           #:return S
            ]
 
 Returns the DayOfWeek that is the specified number of days before this one.
 
  @examples{
   check:
-    d1.subtract(10) is d5
+    d1.minus(10) is d5
   end
  }
 
-  @dow-method["between"
-           #:contract (a-arrow DoW DoW N)
-           #:args (list (list "self" #f) (list "other" #f))
-           #:return N
-           ]
-
-Returns the number of days between the two given Days.
-
- @examples{
-  check:
-    d1.between(d3) is 2
-    d3.between(d1) is 2
-  end
- }
-
- @dow-method["add"
-           #:contract (a-arrow DoW N DoW)
+ @dow-method["plus"
+           #:contract (a-arrow DoW N S)
            #:args (list (list "self" #f) (list "days" #f))
-           #:return DoW
+           #:return S
            ]
 
 Returns the DayOfWeek that is the specified number of days after this one.
 
  @examples{
   check:
-    d1.add(10) is d4
+    d1.plus(10) is d4
   end
  }
 
- @section{DayOfWeek Functions}
+ @section{Duration Functions}
 
- @function["num-to-day"
+ These functions require the DayOfWeek module to be
+ @pyret{import}ed, as indicated in the examples.
+
+ @function["day-of-num"
            #:contract (a-arrow N DoW)
            #:args '(("n" #f))
            #:return DoW
@@ -153,17 +140,17 @@ Returns the DayOfWeek that is the specified number of days after this one.
 
   @examples{
    check:
-     num-to-day(3) is d3
-     num-to-day(-12) is d2
-     num-to-day(22/7)
+     day-of-num(3) is d3
+     day-of-num(-12) is d2
+     day-of-num(22/7)
        raises "Can only create DayOfWeek from Natural Numbers" 
    end
   }
  }
 
- @function["string-to-day"
+ @function["day-of-text"
            #:contract (a-arrow S DoW)
-           #:args '(("text" #f))
+           #:args '(("n" #f))
            #:return DoW
            ]{
 
@@ -172,8 +159,8 @@ Returns the DayOfWeek that is the specified number of days after this one.
 
   @examples{
    check:
-     string-to-day("THUrsDaY") is d4
-     string-to-day("mon")
+     day-of-text("THUrsDaY") is d4
+     day-of-text("mon")
        raises "Please enter the day in full trade form eg 'Monday'"
    end
   }

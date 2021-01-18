@@ -115,4 +115,6 @@
 
 @include-section["naive-date.scrbl"]
 @include-section["naive-time.scrbl"]
+@include-section["utc-date-time.scrbl"]
 @include-section["offset-time.scrbl"]
+@include-section["offset-date-time.scrbl"]

@@ -19,7 +19,7 @@
      (fun-spec (name "make-zone-id"))
      (fun-spec (name "zone-id"))
      
-     (fun-spec (name "string-to-zone-id"))
+     (fun-spec (name "zone-id-of-text"))
      (fun-spec (name "system-default-zone-id"))
      ))
 
@@ -278,12 +278,28 @@
   The ZoneId stores the Time-Zone codes of all ZoneOffsets around the world.
   
   Each code is mapped to a specific offset in a key-value pair dictionary to allow
-  conversion between ZoneId and ZoneOffset, thereby within Temporal objects.
+  conversion of data between Zoned Temporal objects and Offset Temporal objects.
 
-  
+  If multiple Time-Zone codes exist for a ZoneOffset, there may be only one Time-Zone
+  code associated. For instance, PLT is supported for +5:00 but not UZT
  }
 
  @section{ZoneId Methods}
+
+ @zi-method["equals"
+           #:contract (a-arrow ZI ZI B)
+           #:args (list (list "self" #f) (list "other" #f))
+           #:return B
+           ]
+
+ Checks if this ZoneId is equal to another ZoneId.
+
+ @examples{
+  check:
+    EST.equals(EST) is true
+    EST.equals(IST) is false
+  end
+ }
 
  @zi-method["get-zone-offset"
            #:contract (a-arrow ZI ZO)
@@ -296,9 +312,9 @@
  @examples{
   check:
     IST.get-zone-offset()
-      is zone-offset(5, 30)
+      is zone-offset("+", 5, 30)
     UTC.get-zone-offset()
-      is zone-offset(0, 0)
+      is zone-offset("+", 0, 0)
   end
  }
 
@@ -317,14 +333,14 @@
   end
  }
  
- @section{ZoneId Functions}
+ @section{Duration Functions}
 
  These functions require the ZoneId module to be
  @pyret{import}ed, as indicated in the examples.
 
- @function["string-to-zone-id"
+ @function["zone-id-of-text"
            #:contract (a-arrow N ZI)
-           #:args '(("text" #f))
+           #:args '(("n" #f))
            #:return ZI
            ]{
 
@@ -333,15 +349,15 @@
 
   @examples{
    check:
-     string-to-zone-id("IST") is IST
-     string-to-zone-id("EST") is EST
+     zone-id-of-text("IST") is IST
+     zone-id-of-text("EST") is EST
    end
   }
  }
 
  @function["system-default-zone-id"
            #:contract (a-arrow N ZI)
-           #:args '()
+           #:args '(("n" #f))
            #:return ZI
            ]{
 
